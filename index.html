@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <section id="loginGate" class="login-gate hidden" aria-labelledby="loginGateHeading">
+      <div class="login-panel">
+        <div class="brand login-brand">
+          <span class="brand-mark">FK</span>
+          <div>
+            <strong>Equipe FK</strong>
+            <span>Production ledger</span>
+          </div>
+        </div>
+        <p class="eyebrow">Private access</p>
+        <h1 id="loginGateHeading">Sign in to continue.</h1>
+        <p class="hero-copy">This ledger contains confidential team production, commission, and payout data.</p>
+        <form id="loginGateForm" class="login-form">
+          <input id="loginGateEmail" type="email" placeholder="Email" autocomplete="email" required />
+          <input id="loginGatePassword" type="password" placeholder="Password" autocomplete="current-password" required />
+          <button class="primary-button" type="submit">Sign in</button>
+        </form>
+        <p id="loginGateMessage" class="login-message"></p>
+      </div>
+    </section>
+
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">

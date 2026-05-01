@@ -297,12 +297,18 @@ function updateConnectionUi() {
   const status = $("#connectionStatus");
   const form = $("#authForm");
   const signOut = $("#signOutButton");
+  const gate = $("#loginGate");
+  const appShell = $(".app-shell");
+  const gateMessage = $("#loginGateMessage");
   if (!status || !form || !signOut) return;
 
   if (persistenceMode === "cloud") {
     status.textContent = `Cloud mode · ${currentUser.email}`;
     form.classList.add("hidden");
     signOut.classList.remove("hidden");
+    gate?.classList.add("hidden");
+    appShell?.classList.remove("hidden");
+    if (gateMessage) gateMessage.textContent = "";
     return;
   }
 
@@ -310,12 +316,16 @@ function updateConnectionUi() {
     status.textContent = "Cloud mode · sign in required";
     form.classList.remove("hidden");
     signOut.classList.add("hidden");
+    gate?.classList.remove("hidden");
+    appShell?.classList.add("hidden");
     return;
   }
 
   status.textContent = "Local browser mode";
   form.classList.add("hidden");
   signOut.classList.add("hidden");
+  gate?.classList.add("hidden");
+  appShell?.classList.remove("hidden");
 }
 
 function getAgent(agentId) {
@@ -858,12 +868,16 @@ function bindEvents() {
 
     const email = $("#authEmail").value.trim();
     const password = $("#authPassword").value;
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) {
-      alert(`Could not sign in: ${error.message}`);
-      return;
-    }
-    $("#authPassword").value = "";
+    await signIn(email, password, $("#authPassword"));
+  });
+
+  $("#loginGateForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!supabaseClient) return;
+
+    const message = $("#loginGateMessage");
+    if (message) message.textContent = "";
+    await signIn($("#loginGateEmail").value.trim(), $("#loginGatePassword").value, $("#loginGatePassword"), message);
   });
 
   $("#signOutButton").addEventListener("click", async () => {
@@ -936,6 +950,20 @@ function bindEvents() {
       renderAll();
     }
   });
+}
+
+async function signIn(email, password, passwordField, messageElement = null) {
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    const message = `Could not sign in: ${error.message}`;
+    if (messageElement) {
+      messageElement.textContent = message;
+    } else {
+      alert(message);
+    }
+    return;
+  }
+  if (passwordField) passwordField.value = "";
 }
 
 async function initializeApp() {

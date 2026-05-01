@@ -167,6 +167,59 @@ button {
   display: none !important;
 }
 
+.login-gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(90deg, rgba(197, 155, 69, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(197, 155, 69, 0.06) 1px, transparent 1px),
+    #efe6d6;
+  background-size: 48px 48px;
+}
+
+.login-panel {
+  width: min(560px, 100%);
+  background:
+    linear-gradient(135deg, rgba(13, 12, 10, 0.96), rgba(31, 27, 21, 0.92)),
+    var(--black);
+  color: #fffaf0;
+  border: 1px solid rgba(197, 155, 69, 0.34);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 30px;
+}
+
+.login-brand {
+  border-bottom: 0;
+  margin-bottom: 28px;
+  padding-bottom: 0;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.login-form input {
+  min-height: 46px;
+  background: rgba(255, 250, 240, 0.08);
+  border-color: rgba(234, 215, 170, 0.28);
+  color: #fffaf0;
+}
+
+.login-form input::placeholder {
+  color: rgba(255, 250, 240, 0.62);
+}
+
+.login-message {
+  min-height: 22px;
+  margin: 14px 0 0;
+  color: #f1c76e;
+}
+
 .workspace {
   padding: 34px;
   min-width: 0;
