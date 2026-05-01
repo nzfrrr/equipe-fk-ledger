@@ -514,6 +514,29 @@ function renderAgentPerformance(deals) {
   $("#agentPerformance").querySelectorAll("[data-view-agent]").forEach((button) => {
     button.addEventListener("click", () => openAgentDashboard(button.dataset.viewAgent));
   });
+
+  $("#agentPerformanceCards").innerHTML = rows.length
+    ? rows
+        .map(
+          (row) => `
+            <article class="performance-card">
+              <div>
+                <button class="agent-name-button" type="button" data-view-agent="${row.agent.id}">${row.agent.name}</button>
+                <span>${row.count} deals · ${currency.format(row.commission)} gross</span>
+              </div>
+              <div class="performance-stats">
+                <span><strong>${currency.format(row.salesVolume)}</strong> sales</span>
+                <span><strong>${currency.format(row.agentCut)}</strong> agent cut</span>
+              </div>
+            </article>
+          `
+        )
+        .join("")
+    : `<div class="empty-state">No agents yet.</div>`;
+
+  $("#agentPerformanceCards").querySelectorAll("[data-view-agent]").forEach((button) => {
+    button.addEventListener("click", () => openAgentDashboard(button.dataset.viewAgent));
+  });
 }
 
 function renderDealMix(deals) {

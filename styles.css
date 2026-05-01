@@ -479,6 +479,46 @@ textarea:focus {
   gap: 16px;
 }
 
+.mobile-performance-list {
+  display: none;
+}
+
+.performance-card {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  background: #fffaf2;
+}
+
+.performance-card > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.performance-card > div:first-child span,
+.performance-stats span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.performance-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.performance-stats strong {
+  display: block;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  line-height: 1.15;
+}
+
 .panel {
   padding: 18px;
 }
@@ -955,6 +995,51 @@ dialog::backdrop {
   .panel,
   .agent-card {
     padding: 14px;
+  }
+
+  #dashboardView .dashboard-grid {
+    gap: 12px;
+  }
+
+  #dashboardView .panel {
+    padding: 12px;
+  }
+
+  #dashboardView .panel-header {
+    margin-bottom: 10px;
+  }
+
+  #dashboardView .panel-header p {
+    display: none;
+  }
+
+  #dashboardView .desktop-table {
+    display: none;
+  }
+
+  #dashboardView .table-wrap {
+    display: none;
+  }
+
+  #dashboardView .mobile-performance-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  #dashboardView .mix-list {
+    gap: 10px;
+  }
+
+  #dashboardView .mix-item {
+    gap: 6px;
+  }
+
+  #dashboardView .mix-label {
+    font-size: 0.84rem;
+  }
+
+  #dashboardView .bar {
+    height: 8px;
   }
 
   .table-wrap {
