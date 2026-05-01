@@ -767,19 +767,35 @@ dialog::backdrop {
   }
 
   .sidebar {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 20;
     padding: 14px 16px;
     gap: 14px;
   }
 
+  .brand,
   .nav-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    position: sticky;
+    z-index: 21;
   }
 
-  .sidebar > .sidebar-card:first-of-type {
-    display: none;
+  .brand {
+    top: 0;
+    background:
+      linear-gradient(180deg, rgba(197, 155, 69, 0.18), rgba(197, 155, 69, 0) 140%),
+      var(--black);
+    padding-top: 14px;
+  }
+
+  .nav-list {
+    top: 69px;
+    background: var(--black);
+    padding: 8px 0 10px;
+    margin: -8px 0 0;
+  }
+
+  .nav-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .auth-card {
