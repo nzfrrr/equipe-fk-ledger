@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Equipe FK Production Ledger</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">FK</span>
+          <div>
+            <strong>Equipe FK</strong>
+            <span>Production ledger</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Primary navigation">
+          <button class="nav-item active" data-view="dashboard" type="button">
+            <span aria-hidden="true">▦</span>
+            Dashboard
+          </button>
+          <button class="nav-item" data-view="agents" type="button">
+            <span aria-hidden="true">◉</span>
+            Agents
+          </button>
+          <button class="nav-item" data-view="deals" type="button">
+            <span aria-hidden="true">◇</span>
+            Deals
+          </button>
+        </nav>
+
+        <div class="sidebar-card">
+          <span class="eyebrow">Operations</span>
+          <p>Track production, agent cuts, taxes, and brokerage fees against the FK team ledger.</p>
+          <button id="exportCsv" class="secondary-button" type="button">Export CSV</button>
+        </div>
+
+        <div class="sidebar-card auth-card">
+          <span class="eyebrow">Access</span>
+          <p id="connectionStatus">Local browser mode</p>
+          <form id="authForm" class="auth-form">
+            <input id="authEmail" type="email" placeholder="Email" autocomplete="email" />
+            <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
+            <button class="secondary-button" type="submit">Sign in</button>
+          </form>
+          <button id="signOutButton" class="secondary-button hidden" type="button">Sign out</button>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Equipe FK operations</p>
+            <h1>Team production ledger.</h1>
+            <p class="hero-copy">Listings, leases, referrals, taxes, payouts, and brokerage fees in one focused command center.</p>
+          </div>
+        </header>
+
+        <section id="dashboardView" class="view active-view" aria-labelledby="dashboardHeading">
+          <div class="section-heading">
+            <div>
+              <h2 id="dashboardHeading">Business Snapshot</h2>
+              <p>Track paid production, team revenue, and who is driving commission flow.</p>
+            </div>
+            <div class="filter-group">
+              <label for="periodFilter">Period</label>
+              <select id="periodFilter">
+                <option value="all">All time</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last 12 months</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="metric-grid" id="metricGrid"></div>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Agent Performance</h3>
+                  <p>Commission credited by agent across matching deals.</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Agent</th>
+                      <th>Deals</th>
+                      <th>Sales volume</th>
+                      <th>Gross commission</th>
+                      <th>Agent cut / avg.</th>
+                    </tr>
+                  </thead>
+                  <tbody id="agentPerformance"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Deal Mix</h3>
+                  <p>Sales, leases, and referrals by count and commission.</p>
+                </div>
+              </div>
+              <div id="dealMix" class="mix-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="agentsView" class="view" aria-labelledby="agentsHeading">
+          <div class="section-heading">
+            <div>
+              <h2 id="agentsHeading">Agent Roster</h2>
+              <p>Keep the FK team roster, status, and production totals in one place.</p>
+            </div>
+            <button id="openAgentModal" class="primary-button" type="button">New agent</button>
+          </div>
+          <div class="agent-grid" id="agentGrid"></div>
+        </section>
+
+        <section id="agentDetailView" class="view" aria-labelledby="agentDetailHeading">
+          <div class="section-heading">
+            <div>
+              <button id="backToAgents" class="text-button back-button" type="button">Back to agents</button>
+              <h2 id="agentDetailHeading">Agent dashboard</h2>
+              <p id="agentDetailSubhead">Totals, activity, and payout analysis for one agent.</p>
+            </div>
+            <div class="filters-row">
+              <select id="agentActivityType">
+                <option value="all">All types</option>
+                <option value="sale">Sales</option>
+                <option value="lease">Leases</option>
+                <option value="referral">Referrals</option>
+              </select>
+              <select id="agentActivityStatus">
+                <option value="all">All statuses</option>
+                <option value="pipeline">Pipeline</option>
+                <option value="closed">Closed</option>
+                <option value="paid">Paid</option>
+              </select>
+              <select id="agentActivitySort">
+                <option value="date-desc">Newest first</option>
+                <option value="date-asc">Oldest first</option>
+                <option value="commission-desc">Commission high to low</option>
+                <option value="commission-asc">Commission low to high</option>
+                <option value="value-desc">Value high to low</option>
+                <option value="agentCut-desc">Agent cut high to low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="metric-grid" id="agentDetailMetrics"></div>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Activity</h3>
+                  <p>Sortable deal history for this agent.</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Type</th>
+                      <th>Date</th>
+                      <th>Value</th>
+                      <th>Commission</th>
+                      <th>Agent cut</th>
+                      <th>Brokerage fees</th>
+                      <th>Payment</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="agentActivityTable"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Activity Mix</h3>
+                  <p>Production by transaction type.</p>
+                </div>
+              </div>
+              <div id="agentActivityMix" class="mix-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="dealsView" class="view" aria-labelledby="dealsHeading">
+          <div class="section-heading">
+            <div>
+              <h2 id="dealsHeading">Deal Ledger</h2>
+              <p>Log listings, leases, referrals, payout timing, taxes, and brokerage fees.</p>
+            </div>
+            <div class="filters-row">
+              <button id="openDealModal" class="primary-button" type="button">New deal</button>
+              <input id="dealSearch" type="search" placeholder="Search deals or clients" />
+              <select id="dealTypeFilter">
+                <option value="all">All types</option>
+                <option value="sale">Sales</option>
+                <option value="lease">Leases</option>
+                <option value="referral">Referrals</option>
+              </select>
+              <select id="dealStatusFilter">
+                <option value="all">All statuses</option>
+                <option value="pipeline">Pipeline</option>
+                <option value="closed">Closed</option>
+                <option value="paid">Paid</option>
+              </select>
+              <select id="dealSort">
+                <option value="date-desc">Newest first</option>
+                <option value="date-asc">Oldest first</option>
+                <option value="commission-desc">Commission high to low</option>
+                <option value="commission-asc">Commission low to high</option>
+                <option value="value-desc">Value high to low</option>
+                <option value="agentCut-desc">Agent cut high to low</option>
+              </select>
+            </div>
+          </div>
+          <section class="panel">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Agent</th>
+                    <th>Type</th>
+                    <th>Close / Sign</th>
+                    <th>Value</th>
+                    <th>Commission</th>
+                    <th>Agent cut</th>
+                    <th>Brokerage fees</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="dealTable"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="agentModal">
+      <form id="agentForm" method="dialog" class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Roster</p>
+            <h2 id="agentModalTitle">New agent</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-modal="agentModal" aria-label="Close">×</button>
+        </div>
+        <input id="agentId" type="hidden" />
+        <div class="form-grid">
+          <label>
+            Name
+            <input id="agentName" required />
+          </label>
+          <label>
+            Email
+            <input id="agentEmail" type="email" required />
+          </label>
+          <label>
+            Phone
+            <input id="agentPhone" />
+          </label>
+          <label>
+            Team
+            <select id="agentTeam">
+              <option>Equipe FK</option>
+              <option>Residential</option>
+              <option>Commercial</option>
+              <option>Leasing</option>
+              <option>Luxury</option>
+            </select>
+          </label>
+          <label>
+            Default split %
+            <input id="agentSplit" type="number" min="0" max="100" step="1" required />
+          </label>
+          <label>
+            Status
+            <select id="agentStatus">
+              <option value="active">Active</option>
+              <option value="onboarding">Onboarding</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="ghost-button" value="cancel" type="button" data-close-modal="agentModal">Cancel</button>
+          <button class="primary-button" type="submit">Save agent</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dealModal">
+      <form id="dealForm" method="dialog" class="modal-card wide">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Production</p>
+            <h2 id="dealModalTitle">New deal</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="button" data-close-modal="dealModal" aria-label="Close">×</button>
+        </div>
+        <input id="dealId" type="hidden" />
+        <div class="form-grid three">
+          <label>
+            Property / Listing
+            <input id="dealProperty" required />
+          </label>
+          <label>
+            Client
+            <input id="dealClient" required />
+          </label>
+          <label>
+            Agent
+            <select id="dealAgent" required></select>
+          </label>
+          <label>
+            Type
+            <select id="dealType">
+              <option value="sale">Sale</option>
+              <option value="lease">Lease</option>
+              <option value="referral">Referral</option>
+            </select>
+          </label>
+          <label>
+            Close / Sign date
+            <input id="dealDate" type="date" required />
+          </label>
+          <label>
+            Status
+            <select id="dealStatus">
+              <option value="pipeline">Pipeline</option>
+              <option value="closed">Closed</option>
+              <option value="paid">Paid</option>
+            </select>
+          </label>
+          <label>
+            Sale price / Lease value
+            <input id="dealValue" type="number" min="0" step="100" required />
+          </label>
+          <label>
+            Gross commission
+            <input id="dealCommission" type="number" min="0" step="100" required />
+          </label>
+          <label>
+            Team cut
+            <input id="dealTeamCut" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            Agent cut
+            <input id="dealAgentCut" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            QST
+            <input id="dealQst" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            GST
+            <input id="dealGst" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            Total with taxes
+            <input id="dealTotalWithTaxes" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            Brokerage fees
+            <input id="dealBrokerageFees" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            Payment date
+            <input id="dealPaymentDate" type="date" />
+          </label>
+        </div>
+        <label class="full-label">
+          Notes
+          <textarea id="dealNotes" rows="3"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button class="ghost-button" value="cancel" type="button" data-close-modal="dealModal">Cancel</button>
+          <button class="primary-button" type="submit">Save deal</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
