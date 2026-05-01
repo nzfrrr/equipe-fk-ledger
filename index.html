@@ -354,7 +354,8 @@
         <div class="form-grid three">
           <label>
             Property / Listing
-            <input id="dealProperty" required />
+            <input id="dealProperty" list="propertySuggestions" autocomplete="street-address" required />
+            <datalist id="propertySuggestions"></datalist>
           </label>
           <label>
             Client

@@ -773,6 +773,15 @@ function populateAgentSelect() {
     .join("");
 }
 
+function populatePropertySuggestions() {
+  const properties = [...new Set(state.deals.map((deal) => deal.property).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+
+  $("#propertySuggestions").innerHTML = properties
+    .map((property) => `<option value="${property}"></option>`)
+    .join("");
+}
+
 function renderDashboard() {
   const deals = filteredDealsByPeriod();
   renderMetrics(deals);
@@ -782,6 +791,7 @@ function renderDashboard() {
 
 function renderAll() {
   populateAgentSelect();
+  populatePropertySuggestions();
   renderDashboard();
   renderAgents();
   renderDeals();
