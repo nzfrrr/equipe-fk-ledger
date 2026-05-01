@@ -31,6 +31,10 @@ body {
   color: var(--ink);
 }
 
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 button,
 input,
 select,
@@ -406,6 +410,7 @@ textarea {
   min-height: 40px;
   padding: 8px 11px;
   outline: none;
+  max-width: 100%;
 }
 
 textarea {
@@ -487,6 +492,8 @@ textarea:focus {
 
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 4px;
 }
 
 table {
@@ -760,16 +767,37 @@ dialog::backdrop {
   }
 
   .sidebar {
-    position: static;
-    padding: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 14px 16px;
+    gap: 14px;
   }
 
   .nav-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .sidebar-card {
+  .sidebar > .sidebar-card:first-of-type {
     display: none;
+  }
+
+  .auth-card {
+    padding: 10px 12px;
+  }
+
+  .auth-card .eyebrow,
+  .auth-card .auth-form {
+    display: none;
+  }
+
+  .auth-card p {
+    margin: 0 0 8px;
+    font-size: 0.82rem;
+  }
+
+  .auth-card .secondary-button {
+    min-height: 34px;
   }
 
   .workspace {
@@ -786,16 +814,98 @@ dialog::backdrop {
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .filters-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .filters-row > * {
+    width: 100%;
+  }
+
+  table {
+    min-width: 820px;
+  }
 }
 
 @media (max-width: 680px) {
+  body {
+    background-size: 32px 32px;
+  }
+
+  .login-gate {
+    align-items: start;
+    padding: 14px;
+  }
+
+  .login-panel {
+    padding: 22px;
+    margin-top: 24px;
+  }
+
+  .login-panel h1 {
+    font-size: 2.25rem;
+  }
+
+  .brand {
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    font-size: 0.94rem;
+  }
+
+  .brand strong {
+    font-size: 1.08rem;
+  }
+
+  .brand span {
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+  }
+
   .nav-item {
     justify-content: center;
     padding: 10px 6px;
+    min-height: 42px;
+    font-size: 0.92rem;
   }
 
   .nav-item span {
     display: none;
+  }
+
+  .workspace {
+    padding: 14px 12px 28px;
+  }
+
+  .topbar {
+    padding: 22px;
+    margin-bottom: 22px;
+  }
+
+  .topbar::after {
+    right: 10px;
+    bottom: -20px;
+    font-size: 7rem;
+  }
+
+  h1 {
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+  }
+
+  .section-heading {
+    gap: 14px;
   }
 
   .metric-grid,
@@ -806,11 +916,114 @@ dialog::backdrop {
 
   .filters-row,
   .topbar-actions {
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
 
   .filters-row > *,
   .topbar-actions > * {
     width: 100%;
+  }
+
+  .metric-card,
+  .panel,
+  .agent-card {
+    box-shadow: 0 8px 20px rgba(17, 16, 13, 0.06);
+  }
+
+  .metric-card strong {
+    font-size: 1.65rem;
+  }
+
+  .panel,
+  .agent-card {
+    padding: 14px;
+  }
+
+  .table-wrap {
+    margin: 0 -6px;
+    padding-bottom: 4px;
+  }
+
+  table {
+    min-width: 760px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
+  }
+
+  .card-actions,
+  .row-actions {
+    flex-wrap: wrap;
+  }
+
+  dialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+  }
+
+  .modal-card,
+  .modal-card.wide {
+    width: 100%;
+    padding: 18px;
+  }
+
+  .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--panel);
+    margin: -18px -18px 16px;
+    padding: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .modal-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--panel);
+    margin: 18px -18px -18px;
+    padding: 14px 18px 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .modal-actions > * {
+    flex: 1 1 160px;
+  }
+}
+
+@media (max-width: 430px) {
+  .sidebar {
+    padding: 12px;
+  }
+
+  .nav-list {
+    gap: 6px;
+  }
+
+  .nav-item {
+    font-size: 0.84rem;
+    padding-inline: 4px;
+  }
+
+  .auth-card {
+    font-size: 0.82rem;
+  }
+
+  .login-panel {
+    padding: 18px;
+  }
+
+  h1 {
+    font-size: 2.08rem;
+  }
+
+  .hero-copy {
+    font-size: 0.96rem;
   }
 }
