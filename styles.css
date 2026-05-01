@@ -220,6 +220,11 @@ button {
   color: #f1c76e;
 }
 
+.login-link {
+  color: var(--gold-soft);
+  margin-top: 14px;
+}
+
 .workspace {
   padding: 34px;
   min-width: 0;

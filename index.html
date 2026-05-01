@@ -24,6 +24,16 @@
           <input id="loginGatePassword" type="password" placeholder="Password" autocomplete="current-password" required />
           <button class="primary-button" type="submit">Sign in</button>
         </form>
+        <button id="forgotPasswordButton" class="text-button login-link" type="button">Forgot password?</button>
+        <form id="forgotPasswordForm" class="login-form hidden">
+          <input id="forgotPasswordEmail" type="email" placeholder="Email" autocomplete="email" required />
+          <button class="primary-button" type="submit">Send reset email</button>
+          <button id="backToLoginButton" class="text-button login-link" type="button">Back to sign in</button>
+        </form>
+        <form id="resetPasswordForm" class="login-form hidden">
+          <input id="newPassword" type="password" placeholder="New password" autocomplete="new-password" minlength="8" required />
+          <button class="primary-button" type="submit">Update password</button>
+        </form>
         <p id="loginGateMessage" class="login-message"></p>
       </div>
     </section>

@@ -2,6 +2,7 @@ const STORAGE_KEY = "brokerops-state-v2";
 let supabaseClient = null;
 let currentUser = null;
 let persistenceMode = "local";
+let passwordRecoveryMode = false;
 
 const makeId = () => {
   if (window.crypto?.randomUUID) return window.crypto.randomUUID();
@@ -200,7 +201,8 @@ async function initializeSupabase() {
   currentUser = data.session?.user || null;
   persistenceMode = currentUser ? "cloud" : "locked";
 
-  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    passwordRecoveryMode = event === "PASSWORD_RECOVERY";
     currentUser = session?.user || null;
     persistenceMode = currentUser ? "cloud" : "locked";
     await loadStateFromActiveStore();
@@ -306,8 +308,14 @@ function updateConnectionUi() {
     status.textContent = `Cloud mode · ${currentUser.email}`;
     form.classList.add("hidden");
     signOut.classList.remove("hidden");
-    gate?.classList.add("hidden");
-    appShell?.classList.remove("hidden");
+    if (passwordRecoveryMode) {
+      showPasswordResetForm();
+      gate?.classList.remove("hidden");
+      appShell?.classList.add("hidden");
+    } else {
+      gate?.classList.add("hidden");
+      appShell?.classList.remove("hidden");
+    }
     if (gateMessage) gateMessage.textContent = "";
     return;
   }
@@ -326,6 +334,32 @@ function updateConnectionUi() {
   signOut.classList.add("hidden");
   gate?.classList.add("hidden");
   appShell?.classList.remove("hidden");
+}
+
+function showLoginForm() {
+  $("#loginGateForm").classList.remove("hidden");
+  $("#forgotPasswordButton").classList.remove("hidden");
+  $("#forgotPasswordForm").classList.add("hidden");
+  $("#resetPasswordForm").classList.add("hidden");
+  $("#loginGateHeading").textContent = "Sign in to continue.";
+  $("#loginGateMessage").textContent = "";
+}
+
+function showForgotPasswordForm() {
+  $("#loginGateForm").classList.add("hidden");
+  $("#forgotPasswordButton").classList.add("hidden");
+  $("#forgotPasswordForm").classList.remove("hidden");
+  $("#resetPasswordForm").classList.add("hidden");
+  $("#loginGateHeading").textContent = "Reset your password.";
+  $("#loginGateMessage").textContent = "";
+}
+
+function showPasswordResetForm() {
+  $("#loginGateForm").classList.add("hidden");
+  $("#forgotPasswordButton").classList.add("hidden");
+  $("#forgotPasswordForm").classList.add("hidden");
+  $("#resetPasswordForm").classList.remove("hidden");
+  $("#loginGateHeading").textContent = "Choose a new password.";
 }
 
 function getAgent(agentId) {
@@ -878,6 +912,47 @@ function bindEvents() {
     const message = $("#loginGateMessage");
     if (message) message.textContent = "";
     await signIn($("#loginGateEmail").value.trim(), $("#loginGatePassword").value, $("#loginGatePassword"), message);
+  });
+
+  $("#forgotPasswordButton").addEventListener("click", showForgotPasswordForm);
+  $("#backToLoginButton").addEventListener("click", showLoginForm);
+
+  $("#forgotPasswordForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!supabaseClient) return;
+
+    const email = $("#forgotPasswordEmail").value.trim();
+    const message = $("#loginGateMessage");
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin
+    });
+
+    if (error) {
+      message.textContent = `Could not send reset email: ${error.message}`;
+      return;
+    }
+
+    message.textContent = "Password reset email sent. Check your inbox.";
+  });
+
+  $("#resetPasswordForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!supabaseClient) return;
+
+    const message = $("#loginGateMessage");
+    const { error } = await supabaseClient.auth.updateUser({
+      password: $("#newPassword").value
+    });
+
+    if (error) {
+      message.textContent = `Could not update password: ${error.message}`;
+      return;
+    }
+
+    $("#newPassword").value = "";
+    passwordRecoveryMode = false;
+    message.textContent = "Password updated. You are signed in.";
+    updateConnectionUi();
   });
 
   $("#signOutButton").addEventListener("click", async () => {
