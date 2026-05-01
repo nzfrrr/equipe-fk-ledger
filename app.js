@@ -1,4 +1,6 @@
 const STORAGE_KEY = "brokerops-state-v2";
+const QST_RATE = 0.09975;
+const GST_RATE = 0.05;
 let supabaseClient = null;
 let currentUser = null;
 let persistenceMode = "local";
@@ -383,6 +385,21 @@ function formatDate(value) {
     day: "numeric",
     year: "numeric"
   }).format(new Date(`${value}T00:00:00`));
+}
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function calculateTaxFields(commission) {
+  const grossCommission = Number(commission || 0);
+  const qst = roundMoney(grossCommission * QST_RATE);
+  const gst = roundMoney(grossCommission * GST_RATE);
+  return {
+    qst,
+    gst,
+    totalWithTaxes: roundMoney(grossCommission + qst + gst)
+  };
 }
 
 function typeLabel(type) {
@@ -789,6 +806,13 @@ function openDealModal(dealId = "") {
   $("#dealModal").showModal();
 }
 
+function updateDealTaxFields() {
+  const taxes = calculateTaxFields($("#dealCommission").value);
+  $("#dealQst").value = taxes.qst;
+  $("#dealGst").value = taxes.gst;
+  $("#dealTotalWithTaxes").value = taxes.totalWithTaxes;
+}
+
 async function deleteAgent(agentId) {
   const agent = getAgent(agentId);
   if (!agent) return;
@@ -887,6 +911,7 @@ function bindEvents() {
   $("#dealTypeFilter").addEventListener("change", renderDeals);
   $("#dealStatusFilter").addEventListener("change", renderDeals);
   $("#dealSort").addEventListener("change", renderDeals);
+  $("#dealCommission").addEventListener("input", updateDealTaxFields);
   $("#agentActivityType").addEventListener("change", renderAgentDetail);
   $("#agentActivityStatus").addEventListener("change", renderAgentDetail);
   $("#agentActivitySort").addEventListener("change", renderAgentDetail);
