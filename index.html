@@ -335,8 +335,9 @@
           </label>
         </div>
         <div class="modal-actions">
+          <p id="agentFormMessage" class="modal-message" aria-live="polite"></p>
           <button class="ghost-button" value="cancel" type="button" data-close-modal="agentModal">Cancel</button>
-          <button class="primary-button" type="submit">Save agent</button>
+          <button id="saveAgentButton" class="primary-button" type="submit">Save agent</button>
         </div>
       </form>
     </dialog>
@@ -427,8 +428,9 @@
           <textarea id="dealNotes" rows="3"></textarea>
         </label>
         <div class="modal-actions">
+          <p id="dealFormMessage" class="modal-message" aria-live="polite"></p>
           <button class="ghost-button" value="cancel" type="button" data-close-modal="dealModal">Cancel</button>
-          <button class="primary-button" type="submit">Save deal</button>
+          <button id="saveDealButton" class="primary-button" type="submit">Save deal</button>
         </div>
       </form>
     </dialog>

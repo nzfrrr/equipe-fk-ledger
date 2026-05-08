@@ -1,6 +1,7 @@
 const STORAGE_KEY = "brokerops-state-v2";
 const QST_RATE = 0.09975;
 const GST_RATE = 0.05;
+const CLOUD_SAVE_TIMEOUT_MS = 12000;
 let supabaseClient = null;
 let currentUser = null;
 let persistenceMode = "local";
@@ -190,6 +191,25 @@ function saveLocalState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+async function runCloudMutation(query, action) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), CLOUD_SAVE_TIMEOUT_MS);
+
+  try {
+    const request = typeof query.abortSignal === "function" ? query.abortSignal(controller.signal) : query;
+    const result = await request;
+    if (result.error) throw result.error;
+    return result;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error(`${action} took too long. Check the connection and try again.`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 async function initializeSupabase() {
   if (!isSupabaseConfigured()) {
     persistenceMode = "local";
@@ -260,8 +280,7 @@ async function persistAgent(agent) {
     return;
   }
 
-  const { error } = await supabaseClient.from("agents").upsert(agentToDb(agent));
-  if (error) throw error;
+  await runCloudMutation(supabaseClient.from("agents").upsert(agentToDb(agent)), "Saving agent");
 }
 
 async function persistDeal(deal) {
@@ -271,8 +290,7 @@ async function persistDeal(deal) {
     return;
   }
 
-  const { error } = await supabaseClient.from("deals").upsert(dealToDb(deal));
-  if (error) throw error;
+  await runCloudMutation(supabaseClient.from("deals").upsert(dealToDb(deal)), "Saving deal");
 }
 
 async function removeAgentFromStore(agentId) {
@@ -282,8 +300,7 @@ async function removeAgentFromStore(agentId) {
     return;
   }
 
-  const { error } = await supabaseClient.from("agents").delete().eq("id", agentId);
-  if (error) throw error;
+  await runCloudMutation(supabaseClient.from("agents").delete().eq("id", agentId), "Deleting agent");
 }
 
 async function removeDealFromStore(dealId) {
@@ -293,8 +310,7 @@ async function removeDealFromStore(dealId) {
     return;
   }
 
-  const { error } = await supabaseClient.from("deals").delete().eq("id", dealId);
-  if (error) throw error;
+  await runCloudMutation(supabaseClient.from("deals").delete().eq("id", dealId), "Deleting deal");
 }
 
 function updateConnectionUi() {
@@ -800,6 +816,8 @@ function renderAll() {
 
 function openAgentModal(agentId = "") {
   const agent = state.agents.find((item) => item.id === agentId);
+  setModalMessage("agentFormMessage");
+  setSavingState("saveAgentButton", false, "Saving...");
   $("#agentModalTitle").textContent = agent ? "Edit agent" : "New agent";
   $("#agentId").value = agent?.id || "";
   $("#agentName").value = agent?.name || "";
@@ -818,6 +836,8 @@ function openDealModal(dealId = "") {
   }
 
   const deal = state.deals.find((item) => item.id === dealId);
+  setModalMessage("dealFormMessage");
+  setSavingState("saveDealButton", false, "Saving...");
   $("#dealModalTitle").textContent = deal ? "Edit deal" : "New deal";
   $("#dealId").value = deal?.id || "";
   $("#dealProperty").value = deal?.property || "";
@@ -826,13 +846,13 @@ function openDealModal(dealId = "") {
   $("#dealType").value = deal?.type || "sale";
   $("#dealDate").value = deal?.date || new Date().toISOString().slice(0, 10);
   $("#dealStatus").value = deal?.status || "pipeline";
-  $("#dealValue").value = deal?.value || "";
-  $("#dealCommission").value = deal?.commission || "";
+  $("#dealValue").value = deal?.value ?? 0;
+  $("#dealCommission").value = deal?.commission ?? 0;
   $("#dealTeamCut").value = deal?.teamCut ?? 0;
-  $("#dealAgentCut").value = deal?.agentCut ?? "";
+  $("#dealAgentCut").value = deal?.agentCut ?? 0;
   $("#dealQst").value = deal?.qst ?? 0;
   $("#dealGst").value = deal?.gst ?? 0;
-  $("#dealTotalWithTaxes").value = deal?.totalWithTaxes ?? "";
+  $("#dealTotalWithTaxes").value = deal?.totalWithTaxes ?? 0;
   $("#dealBrokerageFees").value = deal?.brokerageFees ?? 0;
   $("#dealPaymentDate").value = deal?.paymentDate || "";
   $("#dealNotes").value = deal?.notes || "";
@@ -844,6 +864,28 @@ function updateDealTaxFields() {
   $("#dealQst").value = taxes.qst;
   $("#dealGst").value = taxes.gst;
   $("#dealTotalWithTaxes").value = taxes.totalWithTaxes;
+}
+
+function setModalMessage(messageId, message = "", isError = false) {
+  const element = $(`#${messageId}`);
+  if (!element) return;
+
+  element.textContent = message;
+  element.classList.toggle("error", isError);
+}
+
+function setSavingState(buttonId, isSaving, savingLabel) {
+  const button = $(`#${buttonId}`);
+  if (!button) return;
+
+  if (!button.dataset.defaultText) button.dataset.defaultText = button.textContent;
+  button.disabled = isSaving;
+  button.textContent = isSaving ? savingLabel : button.dataset.defaultText;
+}
+
+function numberInputValue(selector) {
+  const value = $(selector).value;
+  return value === "" ? 0 : Number(value);
 }
 
 async function deleteAgent(agentId) {
@@ -1033,6 +1075,8 @@ function bindEvents() {
     };
 
     try {
+      setSavingState("saveAgentButton", true, "Saving...");
+      setModalMessage("agentFormMessage", persistenceMode === "cloud" ? "Saving to cloud..." : "Saving...");
       state.agents = state.agents.some((item) => item.id === id)
         ? state.agents.map((item) => (item.id === id ? agent : item))
         : [...state.agents, agent];
@@ -1041,8 +1085,10 @@ function bindEvents() {
       renderAll();
     } catch (error) {
       state = previousState;
-      alert(`Could not save agent: ${error.message}`);
+      setModalMessage("agentFormMessage", `Could not save agent: ${error.message}`, true);
       renderAll();
+    } finally {
+      setSavingState("saveAgentButton", false, "Saving...");
     }
   });
 
@@ -1058,19 +1104,21 @@ function bindEvents() {
       type: $("#dealType").value,
       date: $("#dealDate").value,
       status: $("#dealStatus").value,
-      value: Number($("#dealValue").value),
-      commission: Number($("#dealCommission").value),
-      teamCut: Number($("#dealTeamCut").value),
-      agentCut: Number($("#dealAgentCut").value),
-      qst: Number($("#dealQst").value),
-      gst: Number($("#dealGst").value),
-      totalWithTaxes: Number($("#dealTotalWithTaxes").value),
-      brokerageFees: Number($("#dealBrokerageFees").value),
+      value: numberInputValue("#dealValue"),
+      commission: numberInputValue("#dealCommission"),
+      teamCut: numberInputValue("#dealTeamCut"),
+      agentCut: numberInputValue("#dealAgentCut"),
+      qst: numberInputValue("#dealQst"),
+      gst: numberInputValue("#dealGst"),
+      totalWithTaxes: numberInputValue("#dealTotalWithTaxes"),
+      brokerageFees: numberInputValue("#dealBrokerageFees"),
       paymentDate: $("#dealPaymentDate").value,
       notes: $("#dealNotes").value.trim()
     };
 
     try {
+      setSavingState("saveDealButton", true, "Saving...");
+      setModalMessage("dealFormMessage", persistenceMode === "cloud" ? "Saving to cloud..." : "Saving...");
       state.deals = state.deals.some((item) => item.id === id)
         ? state.deals.map((item) => (item.id === id ? deal : item))
         : [...state.deals, deal];
@@ -1079,8 +1127,10 @@ function bindEvents() {
       renderAll();
     } catch (error) {
       state = previousState;
-      alert(`Could not save deal: ${error.message}`);
+      setModalMessage("dealFormMessage", `Could not save deal: ${error.message}`, true);
       renderAll();
+    } finally {
+      setSavingState("saveDealButton", false, "Saving...");
     }
   });
 }
