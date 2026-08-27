@@ -37,11 +37,17 @@ With Supabase config and a signed-in user, data is saved to the cloud database. 
 ```js
 window.APP_CONFIG = {
   supabaseUrl: "https://your-project-ref.supabase.co",
-  supabaseAnonKey: "your-public-anon-key"
+  supabaseAnonKey: "your-public-anon-key",
+  publicUrl: "https://your-production-site.example"
 };
 ```
 
 The anon key is public by design. The schema enables Row Level Security and only authenticated users can read/write rows.
+
+For password reset emails, `publicUrl` should be the production URL your friend uses, for example your Vercel URL or custom domain. In Supabase, go to Authentication > URL Configuration and set:
+
+- Site URL: the same production URL
+- Redirect URLs: the same production URL, plus any local URL you use while testing
 
 ## GitHub + Vercel Setup
 

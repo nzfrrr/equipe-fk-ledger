@@ -93,13 +93,19 @@ function getSupabaseConfig() {
   const config = window.APP_CONFIG || {};
   return {
     url: (config.supabaseUrl || "").trim(),
-    anonKey: (config.supabaseAnonKey || "").trim()
+    anonKey: (config.supabaseAnonKey || "").trim(),
+    publicUrl: (config.publicUrl || "").trim()
   };
 }
 
 function isSupabaseConfigured() {
   const config = getSupabaseConfig();
   return Boolean(config.url && config.anonKey && window.supabase);
+}
+
+function getAuthRedirectUrl() {
+  const { publicUrl } = getSupabaseConfig();
+  return publicUrl || window.location.origin;
 }
 
 function agentFromDb(row) {
@@ -1024,7 +1030,7 @@ function bindEvents() {
     const email = $("#forgotPasswordEmail").value.trim();
     const message = $("#loginGateMessage");
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin
+      redirectTo: getAuthRedirectUrl()
     });
 
     if (error) {
