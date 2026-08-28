@@ -89,6 +89,19 @@ const currency = new Intl.NumberFormat("en-CA", {
   maximumFractionDigits: 0
 });
 
+const dealSortFields = {
+  property: { type: "text", defaultDirection: "asc" },
+  agent: { type: "text", defaultDirection: "asc" },
+  type: { type: "text", defaultDirection: "asc" },
+  date: { type: "date", defaultDirection: "desc" },
+  value: { type: "number", defaultDirection: "desc" },
+  commission: { type: "number", defaultDirection: "desc" },
+  agentCut: { type: "number", defaultDirection: "desc" },
+  brokerageFees: { type: "number", defaultDirection: "desc" },
+  paymentDate: { type: "date", defaultDirection: "desc" },
+  status: { type: "text", defaultDirection: "asc" }
+};
+
 function getSupabaseConfig() {
   const config = window.APP_CONFIG || {};
   return {
@@ -454,17 +467,80 @@ function summarizeDeals(deals) {
 }
 
 function sortDeals(deals, sortValue) {
-  const [field, direction] = sortValue.split("-");
+  const { field, direction } = parseDealSortValue(sortValue);
+  const sortField = dealSortFields[field];
   const multiplier = direction === "asc" ? 1 : -1;
-  const getValue = (deal) => {
-    if (field === "date") return new Date(`${deal.date}T00:00:00`).getTime();
-    if (field === "commission") return Number(deal.commission || 0);
-    if (field === "value") return Number(deal.value || 0);
-    if (field === "agentCut") return Number(deal.agentCut || 0);
-    return 0;
-  };
 
-  return [...deals].sort((a, b) => (getValue(a) - getValue(b)) * multiplier);
+  return [...deals].sort((a, b) => {
+    const aValue = getDealSortValue(a, field);
+    const bValue = getDealSortValue(b, field);
+    const aEmpty = aValue === "" || aValue === null || Number.isNaN(aValue);
+    const bEmpty = bValue === "" || bValue === null || Number.isNaN(bValue);
+
+    if (aEmpty && bEmpty) return compareDealFallback(a, b);
+    if (aEmpty) return 1;
+    if (bEmpty) return -1;
+
+    const comparison = sortField.type === "text"
+      ? String(aValue).localeCompare(String(bValue), undefined, { numeric: true, sensitivity: "base" })
+      : Number(aValue) - Number(bValue);
+
+    return comparison ? comparison * multiplier : compareDealFallback(a, b);
+  });
+}
+
+function parseDealSortValue(sortValue) {
+  const [, field = "date", direction = "desc"] = String(sortValue || "").match(/^(.+)-(asc|desc)$/) || [];
+  if (!dealSortFields[field]) return { field: "date", direction: "desc" };
+  return { field, direction };
+}
+
+function getDealSortValue(deal, field) {
+  if (field === "agent") return getAgent(deal.agentId)?.name || "Unassigned";
+  if (field === "date" || field === "paymentDate") {
+    const value = deal[field];
+    return value ? new Date(`${value}T00:00:00`).getTime() : null;
+  }
+  if (dealSortFields[field]?.type === "number") return Number(deal[field] || 0);
+  return deal[field] || "";
+}
+
+function compareDealFallback(a, b) {
+  const dateComparison = getDealSortValue(b, "date") - getDealSortValue(a, "date");
+  if (dateComparison) return dateComparison;
+  return String(a.property || "").localeCompare(String(b.property || ""), undefined, { numeric: true, sensitivity: "base" });
+}
+
+function setDealSortFromColumn(field) {
+  if (!dealSortFields[field]) return;
+
+  const currentSort = parseDealSortValue($("#dealSort").value);
+  const direction = currentSort.field === field
+    ? currentSort.direction === "asc" ? "desc" : "asc"
+    : dealSortFields[field].defaultDirection;
+
+  $("#dealSort").value = `${field}-${direction}`;
+  renderDeals();
+}
+
+function renderDealSortHeaders() {
+  const currentSort = parseDealSortValue($("#dealSort").value);
+
+  $$("[data-deal-sort-column]").forEach((heading) => {
+    const field = heading.dataset.dealSortColumn;
+    const label = heading.dataset.sortLabel || heading.textContent.trim();
+    const isActive = field === currentSort.field;
+    const directionLabel = currentSort.direction === "asc" ? "ascending" : "descending";
+
+    heading.dataset.sortLabel = label;
+    heading.setAttribute("aria-sort", isActive ? directionLabel : "none");
+    heading.innerHTML = `
+      <button class="sort-header" type="button" data-sort-deal="${field}" aria-label="Sort deals by ${label}">
+        <span>${label}</span>
+        <span class="sort-indicator" aria-hidden="true">${isActive ? currentSort.direction === "asc" ? "▲" : "▼" : "↕"}</span>
+      </button>
+    `;
+  });
 }
 
 function showView(viewName) {
@@ -751,6 +827,7 @@ function dealMatchesFilters(deal) {
 }
 
 function renderDeals() {
+  renderDealSortHeaders();
   const deals = sortDeals(state.deals.filter(dealMatchesFilters), $("#dealSort").value);
 
   $("#dealTable").innerHTML = deals.length
@@ -992,6 +1069,9 @@ function bindEvents() {
   $("#dealTypeFilter").addEventListener("change", renderDeals);
   $("#dealStatusFilter").addEventListener("change", renderDeals);
   $("#dealSort").addEventListener("change", renderDeals);
+  $$("[data-deal-sort-column]").forEach((heading) => {
+    heading.addEventListener("click", () => setDealSortFromColumn(heading.dataset.dealSortColumn));
+  });
   $("#dealCommission").addEventListener("input", updateDealTaxFields);
   $("#agentActivityType").addEventListener("change", renderAgentDetail);
   $("#agentActivityStatus").addEventListener("change", renderAgentDetail);

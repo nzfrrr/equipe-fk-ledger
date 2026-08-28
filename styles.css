@@ -557,6 +557,39 @@ th {
   letter-spacing: 0.08em;
 }
 
+th[aria-sort] {
+  padding: 0;
+}
+
+.sort-header {
+  width: 100%;
+  min-height: 45px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 12px 10px;
+  text-align: left;
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
+
+.sort-header:hover,
+.sort-header:focus-visible {
+  color: var(--ink);
+  background: rgba(197, 155, 69, 0.1);
+  outline: 0;
+}
+
+.sort-indicator {
+  color: var(--gold);
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
 tr:last-child td {
   border-bottom: 0;
 }

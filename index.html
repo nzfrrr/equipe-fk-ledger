@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Equipe FK Production Ledger</title>
-    <link rel="stylesheet" href="styles.css?v=20260515" />
+    <link rel="stylesheet" href="styles.css?v=20260828" />
   </head>
   <body>
     <section id="loginGate" class="login-gate hidden" aria-labelledby="loginGateHeading">
@@ -255,10 +255,24 @@
               <select id="dealSort">
                 <option value="date-desc">Newest first</option>
                 <option value="date-asc">Oldest first</option>
+                <option value="property-asc">Property A to Z</option>
+                <option value="property-desc">Property Z to A</option>
+                <option value="agent-asc">Agent A to Z</option>
+                <option value="agent-desc">Agent Z to A</option>
+                <option value="type-asc">Type A to Z</option>
+                <option value="type-desc">Type Z to A</option>
                 <option value="commission-desc">Commission high to low</option>
                 <option value="commission-asc">Commission low to high</option>
                 <option value="value-desc">Value high to low</option>
+                <option value="value-asc">Value low to high</option>
                 <option value="agentCut-desc">Agent cut high to low</option>
+                <option value="agentCut-asc">Agent cut low to high</option>
+                <option value="brokerageFees-desc">Brokerage fees high to low</option>
+                <option value="brokerageFees-asc">Brokerage fees low to high</option>
+                <option value="paymentDate-desc">Payment newest first</option>
+                <option value="paymentDate-asc">Payment oldest first</option>
+                <option value="status-asc">Status A to Z</option>
+                <option value="status-desc">Status Z to A</option>
               </select>
             </div>
           </div>
@@ -267,16 +281,16 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Property</th>
-                    <th>Agent</th>
-                    <th>Type</th>
-                    <th>Close / Sign</th>
-                    <th>Value</th>
-                    <th>Commission</th>
-                    <th>Agent cut</th>
-                    <th>Brokerage fees</th>
-                    <th>Payment</th>
-                    <th>Status</th>
+                    <th data-deal-sort-column="property">Property</th>
+                    <th data-deal-sort-column="agent">Agent</th>
+                    <th data-deal-sort-column="type">Type</th>
+                    <th data-deal-sort-column="date">Close / Sign</th>
+                    <th data-deal-sort-column="value">Value</th>
+                    <th data-deal-sort-column="commission">Commission</th>
+                    <th data-deal-sort-column="agentCut">Agent cut</th>
+                    <th data-deal-sort-column="brokerageFees">Brokerage fees</th>
+                    <th data-deal-sort-column="paymentDate">Payment</th>
+                    <th data-deal-sort-column="status">Status</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -435,8 +449,8 @@
       </form>
     </dialog>
 
-    <script src="config.js?v=20260515"></script>
-    <script src="supabase-js.js?v=20260515"></script>
-    <script src="app.js?v=20260515"></script>
+    <script src="config.js?v=20260828"></script>
+    <script src="supabase-js.js?v=20260828"></script>
+    <script src="app.js?v=20260828"></script>
   </body>
 </html>
